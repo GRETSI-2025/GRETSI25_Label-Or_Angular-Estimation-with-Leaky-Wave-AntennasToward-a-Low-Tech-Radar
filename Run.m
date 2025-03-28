@@ -36,23 +36,23 @@ alpha       =    0.015 *   k0                      ; % Leakage rate expressed in
 Legend  =                             [];
 f       = linspace(f0-B/2, f0+B/2,    9); % Frequency expressed in [Hz]
 u       = linspace( -1.00,  +1.00, 1001); % Direction cosine expressed in []
-GA      =  complex(zeros(1,  length(u))); % LWA transfer function
+WA      =  complex(zeros(1,  length(u))); % LWA transfer function
 
 %  Create the figure
 Figure  = figure(1); set(Figure, 'Position', [100 100 400 350]); hold on; grid on;
 xlabel('asin$(u)$ [deg]'                   , 'Interpreter', 'Latex');
-ylabel('$|\bf{G}(f)^T \bf{A}(f, u)|$  [dB]', 'Interpreter', 'Latex');
+ylabel('$|\bf{W}^T(f)\bf{A}(f, u)|$ [dB]'  , 'Interpreter', 'Latex');
  title('LWA diagram'                       , 'Interpreter', 'Latex');
 
 % Compute and display the antenna pattern as function of the angle and parametrized by the frequency
 for kf = 1:length(f)
     
     %  LWA model
-    for ku = 1:length(u), [GA(ku)] = LWA(u(ku), f(kf), h, P, N_slots, alpha, epsilon_r);
+    for ku = 1:length(u), [WA(ku)] = LWA(u(ku), f(kf), h, P, N_slots, alpha, epsilon_r);
     end
         
     %  Display the antenna diagram
-    plot(asind(u), 20*log10(abs(GA)));
+    plot(asind(u), 20*log10(abs(WA)));
     
     %  Update the legend
     Legend = [Legend ; sprintf('$f = %5.2f$~GHz', f(kf)/1e9)]; %#ok<AGROW>
@@ -79,15 +79,15 @@ s   = exp(1j * 2*pi * ((f0 - B/2) * t + B * t.^2/(2* t(end)))); % Chirp
 
 %  Compute the LWA response to the target backscattered signal
 f   =                    (0:N-1)/N * Fs  ;
-GA  =  complex(zeros(1      , length(f))); % LWA transfer function
-G   =  complex(zeros(N_slots, length(f))); % Waveguide transfer function
+WA  =  complex(zeros(1      , length(f))); % LWA transfer function
+W   =  complex(zeros(N_slots, length(f))); % Waveguide transfer function
  A  =  complex(zeros(N_slots, length(f))); % Slotted array response in the direction cosine u
 
-for kf = 1:length(f), [GA(kf), G(:, kf), A(:, kf), p] = LWA(u, f(kf), h, P, N_slots, alpha, epsilon_r);
+for kf = 1:length(f), [WA(kf), W(:, kf), A(:, kf), p] = LWA(u, f(kf), h, P, N_slots, alpha, epsilon_r);
 end
 
 %  Received signal in a noiseless case
-r = ifft(fft(s).* GA.^2);
+r = ifft(fft(s).* WA.^2);
 
 %  Display the power spectrums
 Figure  = figure(2); set(Figure, 'Position', [100 100 400 350]); set(gca, 'TickLabelInterpreter', 'Latex'); hold on; grid on;
@@ -97,7 +97,7 @@ ylabel('psd [dB ]',                       'Interpreter', 'Latex');
  
 plot((0:N-1)/N * Fs /1e9, 20*log10(abs(fft(s))), 'b');
 plot((0:N-1)/N * Fs /1e9, 20*log10(abs(fft(r))), 'r');
-plot((0:N-1)/N * Fs /1e9, 20*log10(abs(   GA )), 'k');
+plot((0:N-1)/N * Fs /1e9, 20*log10(abs(   WA )), 'k');
 
 legend(        'Transmitted signal                             ',               ...
        sprintf('Received signal ($u = %.2f$, namely $%.1f$ deg)', u, asind(u)), ...
@@ -121,10 +121,10 @@ legend('$\\Re(s)$', '$\\Re(r)$', 'Interpreter', 'Latex');
 %  Compute the radiated power by each channel of the ULA is therefore Pt
 Pt = 1 / N_slots;
 
-%  Compute the average transmit gain of the ULA in the direction of the target for a field of view set to [22.80°, 58.40°]
+%  Compute the average transmit gain of the ULA in the direction of the target
 sqrt_g = 0;
 
-for v = linspace(sind(22.80), sind(58.40), length(t))
+for v = linspace(sind(30.00), sind(60), length(t))
     
     [~, ~, Av] = LWA(v, f0, h, P, N_slots, alpha, epsilon_r); % Beamforming coefficients
     [~, ~, Au] = LWA(v, f0, h, P, N_slots, alpha, epsilon_r); % ULA response to the target
@@ -141,7 +141,7 @@ Gt = sqrt_g^2 / length(v);
 M               = 10000                                        ; % Number of Monte-Carlo runs
 sigma_squared   = 10.^(linspace(70.00, 20.00,  51)/10)         ; % Noise power
 SNR             = 10*log10(Pt * Gt * length(v)./ sigma_squared); % Equivalent SNR for a ULA-based radar expressed in [dB]
-Grid            =      linspace(sind(22.80), sind(58.40), 1001); % Grid containing the direction cosine hypothesises expressed in [] for a field of view set to [22.80°, 58.40°]
+Grid            =      linspace(sind(20.00), sind(60.00), 1001); % Grid containing the direction cosine hypothesises expressed in []
 
 %  Declaration of variables
 % MSE_LWA = zeros(size(SNR));
@@ -153,7 +153,7 @@ for k = 1:length(SNR)
 	
     k
 
-    CRB_LWA(k) = Compute_CRB_LWA(s, Fs, sigma_squared(k), p, GA, A, G);
+    CRB_LWA(k) = Compute_CRB_LWA(s, Fs, sigma_squared(k), p, WA, A, W);
 	CRB_ULA(k) = Compute_CRB_ULA(u, P, N_slots, SNR(k)               );
     
     %  Monte-Carlo simulations
