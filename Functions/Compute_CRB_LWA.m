@@ -1,13 +1,13 @@
-function [CRB] = Compute_CRB_LWA(s, Fs, sigma_squared, p, GA, A, G)
+function [CRB] = Compute_CRB_LWA(s, Fs, sigma_squared, p, WA, A, W)
 
 % Inputs:
 % - s            : Transmitted signal.
 % - Fs           : Sampling frequency expressed in [Hz].
 % - sigma_squared: Noise power (linear scale).
 % - p            : Slots spacing expressed in [m].
-%  - GA          : LWA reponse.
-%  - G           : Waveguide response.
-%  - A           : Slotted array response.
+% - WA           : LWA reponse.
+% - W            : Waveguide response.
+% - A            : Slotted array response.
 %
 % Output:
 % - CRB          : CRB on the estimation of u expressed in [].
@@ -24,7 +24,7 @@ k = 2*pi * f / c;
 
 %  Derivative with respect to the direction cosine (u)
 dA_du       = 1j * k.* p.* A;  
-fft_ds_du   = 2*fft(s).* GA.* sum(G.* dA_du, 1); % Chain rule
+fft_ds_du   = 2*fft(s).* WA.* sum(W.* dA_du, 1); % Chain rule
 ds_du       = ifft(fft_ds_du); % Convert back to time domain
 
 

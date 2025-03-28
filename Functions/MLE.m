@@ -26,13 +26,13 @@ if isempty(r_hat)
     for g = 1:length(Grid)
     
         %  Compute the LWA response to the target backscattered signal
-        GA  =  complex(zeros(1,  length(f))); % LWA transfer function
+        WA  =  complex(zeros(1,  length(f))); % LWA transfer function
 
-        for kf = 1:length(f), [GA(kf)] = LWA(Grid(g), f(kf), h, P, N, alpha, epsilon_r);
+        for kf = 1:length(f), [WA(kf)] = LWA(Grid(g), f(kf), h, P, N, alpha, epsilon_r);
         end
 
         %  Construct the replicae of the received signal
-        r_hat(g, :) = ifft(fft(s).* GA.^2);
+        r_hat(g, :) = ifft(fft(s).* WA.^2);
     
     end
 end
